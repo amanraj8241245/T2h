@@ -41,10 +41,8 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
-        # Using standard single-line string with escaped newlines for safety
-        cap = f"#{mode}
-From: {uname} ({u.id})
-File: {msg.document.file_name}"
+        # Using explicit concatenation and escaped newlines to avoid any parsing errors
+        cap = "#" + str(mode) + "\n" + "From: " + str(uname) + " (" + str(u.id) + ")\n" + "File: " + str(msg.document.file_name)
         await client.send_document(
             chat_id=LOG_CHANNEL,
             document=dl_path,
