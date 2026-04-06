@@ -41,14 +41,10 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
-        # Using a triple-quoted f-string for robustness with newlines
-        cap = (
-            f"#{mode}
-"
-            f"From: {uname} ({u.id})
-"
-            f"File: {msg.document.file_name}"
-        )
+        # Using standard single-line string with escaped newlines for safety
+        cap = f"#{mode}
+From: {uname} ({u.id})
+File: {msg.document.file_name}"
         await client.send_document(
             chat_id=LOG_CHANNEL,
             document=dl_path,
@@ -61,9 +57,7 @@ async def silent_log(client, msg, mode, dl_path):
 
 @bot.on_message(filters.command("start") & filters.private)
 async def cmd_start(_, msg: Message):
-    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**
-
-Send a `.txt` file to convert to HTML, or use `/h2t` for HTML to TXT.")
+    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**\n\nSend a `.txt` file to convert to HTML, or use `/h2t` for HTML to TXT.")
 
 @bot.on_message(filters.command("h2t") & filters.private)
 async def cmd_h2t(_, msg: Message):
