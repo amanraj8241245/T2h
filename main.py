@@ -2,18 +2,27 @@
 from flask import Flask
 import threading
 import os
+import logging
+
+# Configure Flask logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
 
 @app.route('/')
 def health_check():
-    return 'Bot is running!'
+    return 'Bot is running!', 200
 
 def run_flask():
     port = int(os.environ.get('PORT', 8080))
-    app.run(host='0.0.0.0', port=port)
+    logger.info(f"Starting Flask on port {port}")
+    try:
+        app.run(host='0.0.0.0', port=port)
+    except Exception as e:
+        logger.error(f"Flask error: {e}")
 
-# Run Flask in a background thread
+# Start Flask immediately
 threading.Thread(target=run_flask, daemon=True).start()
 
 import asyncio
