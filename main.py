@@ -34,6 +34,20 @@ logging.basicConfig(
 log = logging.getLogger(__name__)
 
 # -- Client --------------------------------------------------------------------
+
+import http.server
+import socketserver
+import threading
+
+def run_health_server():
+    PORT = int(os.environ.get('PORT', 8080))
+    handler = http.server.SimpleHTTPRequestHandler
+    with socketserver.TCPServer(("0.0.0.0", PORT), handler) as httpd:
+        print(f"Health check server running on port {PORT}")
+        httpd.serve_forever()
+
+threading.Thread(target=run_health_server, daemon=True).start()
+
 app = Client(
     "converter_bot",
     api_id=API_ID,
