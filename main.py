@@ -3,25 +3,22 @@ import threading
 import os
 import logging
 from flask import Flask
+from pyrogram import Client, filters
+from pyrogram.types import Message
+from pyrogram.enums import ParseMode
 
-# -- Fix for asyncio loop issues --
+from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, ALLOWED_USERS
+from html_generator import txt_to_html
+from html_to_txt import html_to_txt
+
 try:
     asyncio.get_event_loop()
 except RuntimeError:
     loop = asyncio.new_event_loop()
     asyncio.set_event_loop(loop)
 
-from pyrogram import Client, filters
-from pyrogram.types import Message
-from pyrogram.enums import ParseMode
-
-# Importing from local files
-from config import API_ID, API_HASH, BOT_TOKEN, LOG_CHANNEL, ALLOWED_USERS
-from html_generator import txt_to_html
-from html_to_txt import html_to_txt
-
-# -- Web Server for Health Checks --
 app_web = Flask(__name__)
+
 @app_web.route('/')
 def health_check():
     return 'Bot is running!', 200
@@ -32,7 +29,6 @@ def run_flask():
 
 threading.Thread(target=run_flask, daemon=True).start()
 
-# -- Bot Initialization --
 logging.basicConfig(level=logging.INFO, format='%(asctime)s | %(levelname)s | %(message)s')
 log = logging.getLogger(__name__)
 
@@ -51,7 +47,9 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
-        cap = f"#{mode}\nFrom: {uname} ({u.id})\nFile: {msg.document.file_name}"
+        cap = f"#{mode}
+From: {uname} ({u.id})
+File: {msg.document.file_name}"
         await client.send_document(
             chat_id=LOG_CHANNEL,
             document=dl_path,
@@ -64,7 +62,9 @@ async def silent_log(client, msg, mode, dl_path):
 
 @bot.on_message(filters.command("start") & filters.private)
 async def cmd_start(_, msg: Message):
-    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**\n\nSend a `.txt` file for TXT -> HTML, or use `/h2t` then send an `.html` file for HTML -> TXT.")
+    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**
+
+Send a `.txt` file for TXT -> HTML, or use `/h2t` for HTML -> TXT.")
 
 @bot.on_message(filters.command("h2t") & filters.private)
 async def cmd_h2t(_, msg: Message):
@@ -82,27 +82,19 @@ async def cmd_t2h(_, msg: Message):
 async def handle_docs(client, msg: Message):
     uid = msg.from_user.id
     if not allowed(uid): return
-    
     fname = msg.document.file_name.lower()
-
-    # Case 1: HTML to TXT
     if fname.endswith(".html"):
-        if uid in h2t_pending:
-            h2t_pending.remove(uid)
+        if uid in h2t_pending: h2t_pending.remove(uid)
         d_path = await msg.download(f"downloads/{msg.document.file_name}")
         await silent_log(client, msg, "H2T", d_path)
         out = html_to_txt(d_path)
         await msg.reply_document(out)
-
-    # Case 2: TXT to HTML (Automatic OR requested)
     elif fname.endswith(".txt"):
-        if uid in t2h_pending:
-            t2h_pending.remove(uid)
+        if uid in t2h_pending: t2h_pending.remove(uid)
         d_path = await msg.download(f"downloads/{msg.document.file_name}")
         await silent_log(client, msg, "T2H", d_path)
         out = txt_to_html(d_path)
         await msg.reply_document(out)
 
 if __name__ == '__main__':
-    print("Bot is starting...")
     bot.run()
