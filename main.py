@@ -1,8 +1,16 @@
-from flask import Flask
+import asyncio
 import threading
 import os
 import logging
-import asyncio
+from flask import Flask
+
+# -- Fix for Python 3.14+ asyncio loop issues --
+try:
+    asyncio.get_event_loop()
+except RuntimeError:
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
 from pyrogram import Client, filters
 from pyrogram.types import Message
 from pyrogram.enums import ParseMode
@@ -41,7 +49,6 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
-        # Using explicit concatenation and escaped newlines to avoid any parsing errors
         cap = "#" + str(mode) + "\n" + "From: " + str(uname) + " (" + str(u.id) + ")\n" + "File: " + str(msg.document.file_name)
         await client.send_document(
             chat_id=LOG_CHANNEL,
