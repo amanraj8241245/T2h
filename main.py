@@ -47,10 +47,8 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
-        # Fixed f-string newline issue
-        cap = f"#{mode}
-From: {uname} ({u.id})
-File: {msg.document.file_name}"
+        # Fixed: using \n for newlines to prevent SyntaxError in multi-line f-strings
+        cap = f"#{mode}\nFrom: {uname} ({u.id})\nFile: {msg.document.file_name}"
         await client.send_document(
             chat_id=LOG_CHANNEL,
             document=dl_path,
@@ -63,9 +61,7 @@ File: {msg.document.file_name}"
 
 @bot.on_message(filters.command("start") & filters.private)
 async def cmd_start(_, msg: Message):
-    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**
-
-Send a `.txt` file for TXT -> HTML, or use `/h2t` for HTML -> TXT.")
+    await msg.reply_text("👋 **HTML <-> TXT Converter Bot**\n\nSend a `.txt` file for TXT -> HTML, or use `/h2t` for HTML -> TXT.")
 
 @bot.on_message(filters.command("h2t") & filters.private)
 async def cmd_h2t(_, msg: Message):
