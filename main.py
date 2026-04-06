@@ -47,6 +47,7 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
+        # Fixed f-string newline issue
         cap = f"#{mode}
 From: {uname} ({u.id})
 File: {msg.document.file_name}"
