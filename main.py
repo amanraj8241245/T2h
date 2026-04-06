@@ -1,3 +1,21 @@
+
+from flask import Flask
+import threading
+import os
+
+app = Flask(__name__)
+
+@app.route('/')
+def health_check():
+    return 'Bot is running!'
+
+def run_flask():
+    port = int(os.environ.get('PORT', 8080))
+    app.run(host='0.0.0.0', port=port)
+
+# Run Flask in a background thread
+threading.Thread(target=run_flask, daemon=True).start()
+
 import asyncio
 try:
     asyncio.get_event_loop()
