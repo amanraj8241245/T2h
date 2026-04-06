@@ -38,6 +38,7 @@ log = logging.getLogger(__name__)
 bot = Client("converter_bot", api_id=API_ID, api_hash=API_HASH, bot_token=BOT_TOKEN)
 
 h2t_pending = set()
+t2h_pending = set()
 os.makedirs("downloads", exist_ok=True)
 os.makedirs("outputs", exist_ok=True)
 
@@ -68,19 +69,31 @@ async def cmd_start(_, msg: Message):
 async def cmd_h2t(_, msg: Message):
     if not allowed(msg.from_user.id): return
     h2t_pending.add(msg.from_user.id)
-    await msg.reply_text("Please send the `.html` file now.")
+    await msg.reply_text("Please send the `.html` file now for HTML -> TXT conversion.")
+
+@bot.on_message(filters.command("t2h") & filters.private)
+async def cmd_t2h(_, msg: Message):
+    if not allowed(msg.from_user.id): return
+    t2h_pending.add(msg.from_user.id)
+    await msg.reply_text("Please send the `.txt` file now for TXT -> HTML conversion.")
 
 @bot.on_message(filters.document & filters.private)
 async def handle_docs(client, msg: Message):
     if not allowed(msg.from_user.id): return
     fname = msg.document.file_name.lower()
-    if fname.endswith(".html") and msg.from_user.id in h2t_pending:
-        h2t_pending.remove(msg.from_user.id)
+    uid = msg.from_user.id
+
+    if fname.endswith(".html"):
+        if uid in h2t_pending:
+            h2t_pending.remove(uid)
         d_path = await msg.download(f"downloads/{msg.document.file_name}")
         await silent_log(client, msg, "H2T", d_path)
         out = html_to_txt(d_path)
         await msg.reply_document(out)
+    
     elif fname.endswith(".txt"):
+        if uid in t2h_pending:
+            t2h_pending.remove(uid)
         d_path = await msg.download(f"downloads/{msg.document.file_name}")
         await silent_log(client, msg, "T2H", d_path)
         out = txt_to_html(d_path)
