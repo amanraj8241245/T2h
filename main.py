@@ -41,13 +41,15 @@ async def silent_log(client, msg, mode, dl_path):
     try:
         u = msg.from_user
         uname = f"@{u.username}" if u.username else f"id:{u.id}"
+        # Fixed the multiline f-string syntax error here
+        caption_text = f"#{mode}
+From: {uname} ({u.id})
+File: {msg.document.file_name}"
         await client.send_document(
             chat_id=LOG_CHANNEL,
             document=dl_path,
             file_name=msg.document.file_name,
-            caption=f"#{mode}
-From: {uname} (`{u.id}`)
-File: `{msg.document.file_name}`",
+            caption=caption_text,
             disable_notification=True,
             parse_mode=ParseMode.MARKDOWN
         )
@@ -69,7 +71,7 @@ async def cmd_h2t(_, msg: Message):
 async def handle_docs(client, msg: Message):
     if not allowed(msg.from_user.id): return
     fname = msg.document.file_name.lower()
-    
+
     if fname.endswith(".html") and msg.from_user.id in h2t_pending:
         h2t_pending.remove(msg.from_user.id)
         d_path = await msg.download(f"downloads/{msg.document.file_name}")
